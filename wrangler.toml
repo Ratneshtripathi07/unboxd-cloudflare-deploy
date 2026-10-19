@@ -1,12 +1,12 @@
-name = "unboxd-tracker"
+name = "unboxdproducts"
 pages_build_output_dir = "."
 compatibility_date = "2026-01-01"
 
 # Free Cloudflare Storage Option 1: Workers KV (Recommended - 0 setup)
 # Uncomment after creating a KV namespace in Cloudflare Dashboard:
 # [[kv_namespaces]]
-# binding = "UNBOXD_STORE"
-# id = "YOUR_KV_NAMESPACE_ID"
+binding = "UNBOXD_STORE"
+id = "91a6071d03674ec5a069129a424e2dc9"
 
 # Free Cloudflare Storage Option 2: Cloudflare R2 Object Storage
 # [[r2_buckets]]
