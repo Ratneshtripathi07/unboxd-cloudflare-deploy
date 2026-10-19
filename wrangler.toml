@@ -4,7 +4,7 @@ compatibility_date = "2026-01-01"
 
 # Free Cloudflare Storage Option 1: Workers KV (Recommended - 0 setup)
 # Uncomment after creating a KV namespace in Cloudflare Dashboard:
-# [[kv_namespaces]]
+[[kv_namespaces]]
 binding = "UNBOXD_STORE"
 id = "91a6071d03674ec5a069129a424e2dc9"
 
