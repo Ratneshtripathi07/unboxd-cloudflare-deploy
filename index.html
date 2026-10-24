@@ -712,6 +712,12 @@ input:focus, select:focus, textarea:focus {
   margin-left: auto;
 }
 
+/* Multi-photo product gallery */
+.photo-thumbnails { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+.photo-thumb { position:relative; width:54px; height:54px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f3f4f6; }
+.photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-thumb button { position:absolute; top:1px; right:1px; width:20px; height:20px; padding:0; border-radius:50%; background:rgba(17,24,39,.85); color:#fff; font-size:13px; line-height:1; }
+.photo-count { position:absolute; left:5px; bottom:5px; background:rgba(17,24,39,.84); color:#fff; border-radius:5px; padding:2px 5px; font-size:10px; font-weight:800; }
 /* Lightbox */
 .lightbox {
   position: fixed;
@@ -730,6 +736,12 @@ input:focus, select:focus, textarea:focus {
   object-fit: contain;
   border-radius: 10px;
 }
+.lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:52px; padding:0; border-radius:12px; background:rgba(255,255,255,.16); color:#fff; font-size:28px; border:1px solid rgba(255,255,255,.2); }
+.lightbox-prev { left:14px; }
+.lightbox-next { right:14px; }
+/* Keep gallery arrows anchored when tapped; global button:active scaling caused them to jump. */
+.lightbox-nav:active { transform:translateY(-50%); }
+.lightbox-counter { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); color:#fff; background:rgba(0,0,0,.45); border-radius:999px; padding:6px 11px; font-size:12px; }
 .lightbox-close {
   position: absolute;
   top: 16px;
@@ -846,7 +858,7 @@ body.drag-over::after { content: "Drop product photo to add it"; position: fixed
 <!-- Hidden Instant Camera & File Inputs -->
 <input id="instantCameraInput" type="file" accept="image/*" capture="environment" hidden>
 <input id="formCameraInput" type="file" accept="image/*" capture="environment" hidden>
-<input id="formGalleryInput" type="file" accept="image/*" hidden>
+<input id="formGalleryInput" type="file" accept="image/*" multiple hidden>
 <input id="zipFileInput" type="file" accept=".zip,application/zip,.json,application/json" hidden>
 
 <header>
@@ -998,6 +1010,7 @@ body.drag-over::after { content: "Drop product photo to add it"; position: fixed
         <p class="hint">Auto-compressed before saving. Drop a photo anywhere on this page, paste a copied image, or use an image URL.</p>
       </div>
     </div>
+    <div id="photoThumbnails" class="photo-thumbnails" aria-label="Product photos"></div>
 
     <div class="grid">
       <label class="field span2">
@@ -1131,8 +1144,11 @@ body.drag-over::after { content: "Drop product photo to add it"; position: fixed
 
 <!-- Lightbox for Full-Screen Image Zoom -->
 <div class="lightbox" id="lightbox">
-  <button type="button" class="lightbox-close" id="closeLightboxBtn">✕</button>
+  <button type="button" class="lightbox-close" id="closeLightboxBtn" aria-label="Close gallery">✕</button>
+  <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrevBtn" aria-label="Previous photo">‹</button>
   <img id="lightboxImg" alt="Full size product preview" src="">
+  <button type="button" class="lightbox-nav lightbox-next" id="lightboxNextBtn" aria-label="Next photo">›</button>
+  <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1149,8 +1165,11 @@ const CONFIG_KEY = 'unboxd_sync_config_v1';
 
 let products = [];
 let editingId = null;
-let currentImageData = '';
+let currentImageData = ''; // Backward-compatible primary image
+let currentImagesData = [];
 let quickImageData = '';
+let lightboxImages = [];
+let lightboxIndex = 0;
 let isSyncing = false;
 let syncTimer = null;
 
@@ -1411,6 +1430,13 @@ function compressImage(file, maxDim = 960, quality = 0.78) {
   });
 }
 
+/* Multi-photo compatibility: old records with only `image` remain supported. */
+function getProductImages(product) {
+  const list = Array.isArray(product?.images) ? product.images.filter(x => typeof x === 'string' && x) : [];
+  if (product?.image && !list.includes(product.image)) list.unshift(product.image);
+  return [...new Set(list)];
+}
+
 /* ==========================================
    4. UI RENDERING (Mobile-First Cards + Pen Edit Button)
    ========================================== */
@@ -1467,7 +1493,7 @@ function render() {
     return `
       <article class="card">
         <div class="card-media">
-          ${p.image ? `<img src="${p.image}" alt="${escapeHtml(p.name)}" data-zoom="${p.id}">` : `<span class="card-placeholder">📦</span>`}
+          ${getProductImages(p).length ? `<img src="${getProductImages(p)[0]}" alt="${escapeHtml(p.name)}" data-zoom="${p.id}" loading="lazy">${getProductImages(p).length > 1 ? `<span class="photo-count">${getProductImages(p).length} photos</span>` : ''}` : `<span class="card-placeholder">📦</span>`}
           ${isSnap ? `<span class="snap-badge">⚡ SNAP</span>` : ''}
         </div>
         <div class="card-body">
@@ -1556,6 +1582,7 @@ async function saveQuickSnapProduct(andNext = false) {
     status: 'Quick Snap',
     notes: '',
     image: quickImageData,
+    images: quickImageData ? [quickImageData] : [],
     syncStatus: 'pending',
     updatedAt: new Date().toISOString()
   };
@@ -1592,10 +1619,21 @@ $('emptySnapBtn').addEventListener('click', triggerInstantSnap);
 /* ==========================================
    6. MODE 2: EXTENDED FULL PRODUCT FORM & PEN EDIT
    ========================================== */
+function renderPhotoThumbnails() {
+  const wrap = $('photoThumbnails');
+  if (!wrap) return;
+  wrap.innerHTML = currentImagesData.map((src, i) => `
+    <div class="photo-thumb" title="Photo ${i + 1}">
+      <img src="${src}" alt="Product photo ${i + 1}">
+      <button type="button" data-remove-photo="${i}" aria-label="Remove photo ${i + 1}">×</button>
+    </div>`).join('');
+}
+
 function setFullPreview(src) {
-  currentImageData = src || '';
-  if (src) {
-    $('fullPreviewImg').src = src;
+  currentImagesData = Array.isArray(src) ? src.filter(Boolean) : (src ? [src] : []);
+  currentImageData = currentImagesData[0] || '';
+  if (currentImageData) {
+    $('fullPreviewImg').src = currentImageData;
     $('fullPreviewImg').style.display = 'block';
     $('fullPreviewIcon').style.display = 'none';
     $('formRemoveImgBtn').style.display = 'inline-flex';
@@ -1604,6 +1642,23 @@ function setFullPreview(src) {
     $('fullPreviewImg').style.display = 'none';
     $('fullPreviewIcon').style.display = 'block';
     $('formRemoveImgBtn').style.display = 'none';
+  }
+  renderPhotoThumbnails();
+}
+
+async function addProductPhotos(files) {
+  const imageFiles = [...(files || [])].filter(file => file && file.type && file.type.startsWith('image/'));
+  if (!imageFiles.length) return;
+  try {
+    for (const file of imageFiles) {
+      const compressed = await compressImage(file);
+      if (!currentImagesData.includes(compressed)) currentImagesData.push(compressed);
+    }
+    currentImageData = currentImagesData[0] || '';
+    setFullPreview(currentImagesData);
+    toast(`${imageFiles.length} photo${imageFiles.length === 1 ? '' : 's'} attached.`);
+  } catch {
+    toast('Could not read one or more images.');
   }
 }
 
@@ -1647,7 +1702,7 @@ function openFullEditModal(id) {
   // If editing a Quick Snap, default status selector to Ready so user can promote it easily
   $('fStatus').value = p.status === 'Quick Snap' ? 'Ready' : (p.status || 'Ready');
   $('fNotes').value = p.notes || '';
-  setFullPreview(p.image || '');
+  setFullPreview(getProductImages(p));
   $('fullFormEyebrow').textContent = p.status === 'Quick Snap' ? 'COMPLETE QUICK SNAP' : 'UPDATE PRODUCT';
   $('fullFormTitle').textContent = 'Edit Product Details';
   $('deleteProductBtn').style.display = 'inline-flex';
@@ -1666,7 +1721,13 @@ $('formChooseFileBtn').addEventListener('click', () => {
   $('formGalleryInput').value = '';
   $('formGalleryInput').click();
 });
-$('formRemoveImgBtn').addEventListener('click', () => setFullPreview(''));
+$('formRemoveImgBtn').addEventListener('click', () => setFullPreview([]));
+$('photoThumbnails').addEventListener('click', e => {
+  const btn = e.target.closest('[data-remove-photo]');
+  if (!btn) return;
+  currentImagesData.splice(Number(btn.dataset.removePhoto), 1);
+  setFullPreview(currentImagesData);
+});
 
 $('pasteImageBtn').addEventListener('click', async () => {
   try {
@@ -1674,7 +1735,7 @@ $('pasteImageBtn').addEventListener('click', async () => {
     const items = await navigator.clipboard.read();
     for (const item of items) {
       const type = item.types.find(t => t.startsWith('image/'));
-      if (type) { const blob = await item.getType(type); setFullPreview(await compressImage(blob)); toast('Pasted image attached.'); return; }
+      if (type) { const blob = await item.getType(type); await addProductPhotos([blob]); return; }
     }
     toast('No image found in clipboard. Copy an image first.');
   } catch (err) { toast(err.message || 'Clipboard access blocked. Try Ctrl+V or Image URL.'); }
@@ -1689,22 +1750,16 @@ $('imageUrlBtn').addEventListener('click', async () => {
     if (!response.ok) throw new Error('Image could not be fetched.');
     const blob = await response.blob();
     if (!blob.type.startsWith('image/')) throw new Error('That URL did not return an image. Try the direct image URL.');
-    setFullPreview(await compressImage(blob));
-    toast('Image imported and compressed.');
+    await addProductPhotos([blob]);
   } catch (err) { toast(err.message || 'Import blocked by the website. Save/copy the image and paste or upload it instead.'); }
 });
 
 
 async function handleFormImagePick(e) {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  try {
-    const compressed = await compressImage(file);
-    setFullPreview(compressed);
-    toast('Photo attached & compressed.');
-  } catch {
-    toast('Could not read image.');
-  }
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+  await addProductPhotos(files);
+  e.target.value = '';
 }
 $('formCameraInput').addEventListener('change', handleFormImagePick);
 $('formGalleryInput').addEventListener('change', handleFormImagePick);
@@ -1716,14 +1771,14 @@ window.addEventListener('paste', async e => {
     if (item.type.startsWith('image/')) {
       const file = item.getAsFile();
       if (file) {
-        const compressed = await compressImage(file);
         if ($('quickSnapBackdrop').classList.contains('open')) {
+          const compressed = await compressImage(file);
           quickImageData = compressed; $('quickPreviewImg').src = compressed; $('quickPreviewImg').style.display = 'block'; $('quickPlaceholder').style.display = 'none';
+          toast('Pasted image attached!');
         } else {
           if (!$('fullFormBackdrop').classList.contains('open')) openFullAddModal();
-          setFullPreview(compressed);
+          await addProductPhotos([file]);
         }
-        toast('Pasted image attached!');
       }
     }
   }
@@ -1743,7 +1798,8 @@ $('fullProductForm').addEventListener('submit', async e => {
     stock: $('fStock').value,
     status: $('fStatus').value,
     notes: $('fNotes').value.trim(),
-    image: currentImageData,
+    image: currentImagesData[0] || currentImageData,
+    images: [...currentImagesData],
     syncStatus: 'pending',
     updatedAt: new Date().toISOString()
   };
@@ -1789,11 +1845,29 @@ $('productGrid').addEventListener('click', e => {
   }
   const zoomImg = e.target.closest('[data-zoom]');
   if (zoomImg) {
-    $('lightboxImg').src = zoomImg.src;
+    const product = products.find(p => p.id === zoomImg.dataset.zoom);
+    lightboxImages = product ? getProductImages(product) : [zoomImg.src];
+    if (!lightboxImages.length) lightboxImages = [zoomImg.src];
+    lightboxIndex = Math.max(0, lightboxImages.indexOf(zoomImg.src));
+    showLightboxImage();
     $('lightbox').classList.add('open');
   }
 });
 
+function showLightboxImage() {
+  if (!lightboxImages.length) return;
+  $('lightboxImg').src = lightboxImages[lightboxIndex];
+  $('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  $('lightboxPrevBtn').style.display = lightboxImages.length > 1 ? 'inline-flex' : 'none';
+  $('lightboxNextBtn').style.display = lightboxImages.length > 1 ? 'inline-flex' : 'none';
+}
+$('lightboxPrevBtn').addEventListener('click', e => { e.stopPropagation(); lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); });
+$('lightboxNextBtn').addEventListener('click', e => { e.stopPropagation(); lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); });
+document.addEventListener('keydown', e => {
+  if (!$('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') { lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); }
+  if (e.key === 'ArrowRight') { lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); }
+});
 $('closeLightboxBtn').addEventListener('click', () => $('lightbox').classList.remove('open'));
 $('lightbox').addEventListener('click', e => {
   if (e.target === $('lightbox')) $('lightbox').classList.remove('open');
@@ -1962,14 +2036,12 @@ document.addEventListener('dragleave', e => { if ([...(e.dataTransfer?.types || 
 document.addEventListener('drop', async e => {
   const files = [...(e.dataTransfer?.files || [])];
   if (!files.length) return;
-  const file = files.find(f => f.type.startsWith('image/'));
-  if (!file) { toast('Drop an image file to add a product.'); return; }
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  if (!imageFiles.length) { toast('Drop image files to add a product.'); return; }
   e.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over');
-  try {
-    const compressed = await compressImage(file);
-    openFullAddModal(); setFullPreview(compressed);
-    $('fName').focus(); toast('Photo added. Complete the product details.');
-  } catch { toast('Could not read that image. Try another file.'); }
+  openFullAddModal();
+  await addProductPhotos(imageFiles);
+  $('fName').focus(); toast(`${imageFiles.length} photo${imageFiles.length === 1 ? '' : 's'} added. Complete the product details.`);
 });
 
 // Register Service Worker for offline PWA phone experience
