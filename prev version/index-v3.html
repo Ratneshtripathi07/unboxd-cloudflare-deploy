@@ -1,0 +1,2055 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>UNBOXD — Fast Product & Sourcing Tracker</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root {
+  --bg: #f4f4f6;
+  --card: #ffffff;
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --accent: #f59e0b;
+  --accent-dark: #d97706;
+  --accent-soft: #fef3c7;
+  --primary: #111827;
+  --green: #059669;
+  --green-soft: #d1fae5;
+  --red: #dc2626;
+  --red-soft: #fee2e2;
+  --blue: #2563eb;
+  --blue-soft: #dbeafe;
+  --radius: 14px;
+  --shadow: 0 2px 10px rgba(17, 24, 39, 0.06);
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: rgba(17, 24, 39, 0.96);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  padding: 12px max(16px, calc((100vw - 1200px) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo {
+  height: 38px;
+  width: 38px;
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #111827;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: -0.5px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+.brand-text h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+.brand-text p {
+  margin: 1px 0 0;
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sync Status Pill */
+.sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.1);
+  color: #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.14);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+.sync-pill.syncing .sync-dot {
+  background: #f59e0b;
+  animation: pulse 1s infinite;
+}
+.sync-pill.pending .sync-dot {
+  background: #3b82f6;
+}
+.sync-pill.offline .sync-dot {
+  background: #9ca3af;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.55; }
+}
+
+/* Buttons */
+button, .btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: transform 0.08s ease, background 0.15s ease, opacity 0.15s ease;
+}
+button:active { transform: scale(0.97); }
+.btn-snap {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #111827;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+.btn-dark {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-light {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: #374151;
+}
+.btn-ghost {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  padding: 8px 11px;
+  font-size: 12px;
+}
+.btn-danger {
+  background: var(--red-soft);
+  color: var(--red);
+}
+.icon-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #1f2937;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: #e5e7eb; }
+
+/* Main Container */
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* Quick Action Hero Banner */
+.hero-bar {
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.hero-copy h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+.hero-copy p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
+.hero-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* KPI Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+.stat span {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.stat strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 4px;
+  color: var(--ink);
+}
+
+/* Controls & Search Bar */
+.toolbar {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+.search-wrap {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+}
+input, select, textarea {
+  font: inherit;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--ink);
+  min-width: 0;
+  outline: none;
+  font-size: 14px; /* Prevents iOS auto-zoom on focus */
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent-dark);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+.search-wrap input { flex: 1; }
+.toolbar-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Product Grid (Mobile-First Cards, Responsive Multi-Column on Desktop) */
+.catalogue-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 2px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 12px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+.card:hover { border-color: #cbd5e1; }
+.card-media {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: zoom-in;
+}
+.card-placeholder {
+  color: #9ca3af;
+  font-size: 24px;
+}
+.snap-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(17, 24, 39, 0.82);
+  color: #fbbf24;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 5px;
+  letter-spacing: 0.4px;
+}
+.card-body {
+  flex: 1;
+  min-width: 0;
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 2px 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.price-strip {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.sell-price {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ink);
+}
+.cost-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+.profit-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+.profit-tag.pos { background: var(--green-soft); color: var(--green); }
+.profit-tag.neg { background: var(--red-soft); color: var(--red); }
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #f3f4f6;
+  color: #4b5563;
+}
+.pill.in, .pill.ready { background: var(--green-soft); color: var(--green); }
+.pill.low, .pill.snap { background: var(--accent-soft); color: var(--accent-dark); }
+.pill.out { background: var(--red-soft); color: var(--red); }
+.pill.sync-pending { background: var(--blue-soft); color: var(--blue); }
+
+/* Edit Pen Button on Card */
+.edit-pen-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #f9fafb;
+  border: 1px solid var(--line);
+  color: #111827;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.edit-pen-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.edit-pen-btn svg {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+/* Empty State */
+.empty {
+  background: var(--card);
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius);
+  text-align: center;
+  padding: 44px 18px;
+  color: var(--muted);
+}
+.empty h3 {
+  margin: 8px 0 4px;
+  color: var(--ink);
+  font-size: 18px;
+}
+.empty p {
+  margin: 0 auto 16px;
+  max-width: 380px;
+  font-size: 13px;
+}
+
+/* Sticky Bottom Bar for Mobile */
+.mobile-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 35;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+}
+.mobile-dock button {
+  flex: 1;
+  padding: 13px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+
+/* Modals / Bottom Sheets */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(3px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  z-index: 50;
+}
+.backdrop.open { display: flex; }
+.modal {
+  width: min(620px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: var(--card);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.18s ease-out;
+}
+.modal.quick-modal {
+  width: min(420px, 100%);
+}
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.modal-head .eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--accent-dark);
+  text-transform: uppercase;
+  margin: 0 0 3px;
+}
+.modal-head h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+.close-x {
+  background: #f3f4f6;
+  color: #4b5563;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 18px;
+}
+
+/* Image Upload / Camera Picker Box */
+.image-picker {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1.5px dashed #d1d5db;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+.preview-box {
+  width: 88px;
+  height: 88px;
+  border-radius: 10px;
+  background: #e5e7eb;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.picker-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.picker-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.picker-btns button {
+  padding: 8px 11px;
+  font-size: 12px;
+}
+.hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Quick Snap Specific Styles */
+.quick-snap-preview {
+  width: 100%;
+  height: 210px;
+  border-radius: 14px;
+  background: #111827;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  position: relative;
+  border: 1px solid var(--line);
+}
+.quick-snap-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.retake-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(17, 24, 39, 0.85);
+  color: #fff;
+  padding: 7px 11px;
+  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.big-price-field {
+  background: #fef3c7;
+  border: 2px solid #f59e0b;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.big-price-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #92400e;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+.big-price-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.big-price-input-wrap span {
+  font-size: 26px;
+  font-weight: 800;
+  color: #111827;
+}
+.big-price-input-wrap input {
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 800;
+  padding: 2px 0;
+  width: 100%;
+  color: #111827;
+  box-shadow: none !important;
+}
+
+/* Form Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #374151;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  font-weight: 500;
+}
+.span2 { grid-column: 1 / -1; }
+.profit-calc {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f4f6;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.profit-calc strong {
+  font-size: 16px;
+  color: var(--green);
+}
+.modal-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.modal-foot-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Multi-photo product gallery */
+.photo-thumbnails { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
+.photo-thumb { position:relative; width:54px; height:54px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f3f4f6; }
+.photo-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.photo-thumb button { position:absolute; top:1px; right:1px; width:20px; height:20px; padding:0; border-radius:50%; background:rgba(17,24,39,.85); color:#fff; font-size:13px; line-height:1; }
+.photo-count { position:absolute; left:5px; bottom:5px; background:rgba(17,24,39,.84); color:#fff; border-radius:5px; padding:2px 5px; font-size:10px; font-weight:800; }
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 14, 23, 0.92);
+  z-index: 80;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: 94vw;
+  max-height: 86vh;
+  object-fit: contain;
+  border-radius: 10px;
+}
+.lightbox-nav { position:absolute; top:50%; transform:translateY(-50%); width:44px; height:52px; padding:0; border-radius:12px; background:rgba(255,255,255,.16); color:#fff; font-size:28px; border:1px solid rgba(255,255,255,.2); }
+.lightbox-prev { left:14px; }
+.lightbox-next { right:14px; }
+/* Keep gallery arrows anchored when tapped; global button:active scaling caused them to jump. */
+.lightbox-nav:active { transform:translateY(-50%); }
+.lightbox-counter { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); color:#fff; background:rgba(0,0,0,.45); border-radius:999px; padding:6px 11px; font-size:12px; }
+.lightbox-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 22px;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 90;
+  display: none;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+  white-space: nowrap;
+}
+.toast.show { display: block; }
+
+@media (min-width: 769px) {
+  .mobile-dock { display: none; }
+  body { padding-bottom: 40px; }
+  .toast { bottom: 24px; }
+}
+@media (max-width: 768px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-actions { display: none; }
+  .grid { grid-template-columns: 1fr; }
+  .span2 { grid-column: auto; }
+  .backdrop { align-items: flex-end; padding: 0; }
+  .modal, .modal.quick-modal {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: 20px 20px 0 0;
+    padding: 18px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  .product-grid { grid-template-columns: 1fr; }
+}
+
+/* Responsive refinements: preserve the existing product form and all fields. */
+html { width: 100%; overflow-x: clip; }
+body { width: 100%; min-width: 0; }
+header { width: 100%; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+main { width: 100%; min-width: 0; }
+.product-grid, .toolbar, .hero-bar, .stats, .catalogue-meta { min-width: 0; }
+.card-body, .card-top, .card-top > div { min-width: 0; }
+.card-title, .card-sub { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  header { gap: 8px; padding-top: 9px; padding-bottom: 9px; }
+  .brand { gap: 8px; min-width: 0; }
+  .logo { width: 34px; height: 34px; flex: 0 0 34px; }
+  .brand-text h1 { font-size: 15px; }
+  .brand-text p { font-size: 8px; letter-spacing: .8px; }
+  .header-right { gap: 5px; min-width: 0; }
+  .sync-pill { max-width: 44vw; overflow: hidden; text-overflow: ellipsis; padding: 6px 8px; font-size: 10px; }
+  #backupMenuBtn { padding: 8px; font-size: 11px; white-space: nowrap; }
+  main { padding: 10px; }
+  .hero-bar { padding: 13px; margin-bottom: 10px; }
+  .hero-copy h2 { font-size: 16px; line-height: 1.3; }
+  .hero-copy p { font-size: 11px; }
+  .stats { gap: 7px; margin-bottom: 10px; }
+  .stat { padding: 10px; }
+  .stat strong { font-size: 18px; overflow-wrap: anywhere; }
+  .toolbar { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; padding: 9px; }
+  .search-wrap { min-width: 0; width: 100%; }
+  .toolbar-right { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); width: 100%; }
+  .toolbar-right select { width: 100%; }
+  .catalogue-meta { gap: 8px; flex-wrap: wrap; font-size: 11px; }
+  .product-grid { grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .card { padding: 9px; gap: 9px; }
+  .card-media { width: 72px; height: 72px; }
+  .card-title { font-size: 14px; line-height: 1.3; padding-right: 2px; }
+  .card-sub { font-size: 11px; margin-bottom: 6px; }
+  .price-strip { gap: 6px; margin-bottom: 6px; }
+  .sell-price { font-size: 16px; }
+  .card-tags { gap: 4px; }
+  .pill { padding: 3px 6px; }
+  .mobile-dock { padding-left: max(10px, env(safe-area-inset-left)); padding-right: max(10px, env(safe-area-inset-right)); gap: 7px; }
+  .mobile-dock button { padding: 12px 8px; font-size: 13px; }
+  .image-picker { align-items: flex-start; gap: 9px; padding: 9px; }
+  .preview-box { width: 72px; height: 72px; }
+  .picker-btns button { padding: 8px 9px; }
+  .modal { overflow-x: hidden; }
+  .modal-foot { align-items: stretch; }
+  .modal-foot-right { width: 100%; }
+  .modal-foot-right button { flex: 1; }
+  .toast { max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+}
+@media (max-width: 360px) {
+  .brand-text p { display: none; }
+  .sync-pill { max-width: 38vw; }
+  .card-media { width: 60px; height: 60px; }
+  .toolbar-right { grid-template-columns: 1fr; }
+}
+/* Drag-and-drop target feedback */
+body.drag-over::after { content: "Drop product photo to add it"; position: fixed; inset: 12px; z-index: 200; display: grid; place-items: center; border: 3px dashed var(--accent); border-radius: 20px; background: rgba(255,243,199,.94); color: var(--ink); font-size: clamp(18px,4vw,28px); font-weight: 800; pointer-events: none; }
+
+</style>
+</head>
+<body>
+
+<!-- Hidden Instant Camera & File Inputs -->
+<input id="instantCameraInput" type="file" accept="image/*" capture="environment" hidden>
+<input id="formCameraInput" type="file" accept="image/*" capture="environment" hidden>
+<input id="formGalleryInput" type="file" accept="image/*" multiple hidden>
+<input id="zipFileInput" type="file" accept=".zip,application/zip,.json,application/json" hidden>
+
+<header>
+  <div class="brand">
+    <div class="logo">U</div>
+    <div class="brand-text">
+      <h1>UNBOXD</h1>
+      <p>Cloud Product Tracker</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button type="button" class="sync-pill" id="syncStatusBtn" title="Cloudflare background sync status & settings">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncLabel">Local + Cloud Ready</span>
+    </button>
+    <button type="button" class="btn-ghost" id="backupMenuBtn" title="Backup / Export">⇅ Backup</button>
+  </div>
+</header>
+
+<main>
+  <section class="hero-bar">
+    <div class="hero-copy">
+      <h2>Snap fast. Detail later. Syncs in background.</h2>
+      <p>Instant local-first storage (IndexedDB) + non-blocking async Cloudflare sync.</p>
+    </div>
+    <div class="hero-actions">
+      <button type="button" class="btn-snap" id="desktopSnapBtn">⚡ Instant Photo + Price</button>
+      <button type="button" class="btn-light" id="desktopAddBtn">＋ Full Product Form</button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><span>Total Items</span><strong id="statCount">0</strong></div>
+    <div class="stat"><span>Catalogue Value</span><strong id="statValue">₹0</strong></div>
+    <div class="stat"><span>Avg. Margin / Unit</span><strong id="statProfit">₹0</strong></div>
+    <div class="stat"><span>Quick Snaps / Alerts</span><strong id="statAlerts">0</strong></div>
+  </section>
+
+  <section class="toolbar">
+    <div class="search-wrap">
+      <input id="searchInput" type="search" placeholder="Search name, supplier, category, notes…">
+    </div>
+    <div class="toolbar-right">
+      <select id="statusFilter">
+        <option value="All">All Statuses</option>
+        <option value="Quick Snap">⚡ Quick Snap (Needs Edit)</option>
+        <option value="Draft">Draft</option>
+        <option value="Ready">Ready</option>
+        <option value="Customizable">Customizable</option>
+        <option value="Discontinued">Discontinued</option>
+      </select>
+      <select id="sortSelect">
+        <option value="newest">Newest First</option>
+        <option value="priceAsc">Price: Low to High</option>
+        <option value="priceDesc">Price: High to Low</option>
+        <option value="profitDesc">Highest Profit</option>
+      </select>
+    </div>
+  </section>
+
+  <div class="catalogue-meta">
+    <span id="catalogueCaption">0 products · saved locally</span>
+    <span id="lastSyncedCaption">Cloud sync: automatic</span>
+  </div>
+
+  <div class="product-grid" id="productGrid"></div>
+
+  <div class="empty" id="emptyState" style="display:none;">
+    <div style="font-size:34px;">📦</div>
+    <h3>Your UNBOXD catalogue is empty</h3>
+    <p>Click a photo with just the price in 2 seconds, or add a full product with supplier and cost details.</p>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button type="button" class="btn-snap" id="emptySnapBtn">⚡ Instant Photo + Price</button>
+      <button type="button" class="btn-dark" id="emptyAddBtn">＋ Full Product</button>
+    </div>
+  </div>
+</main>
+
+<!-- Mobile Sticky Bottom Action Bar -->
+<div class="mobile-dock">
+  <button type="button" class="btn-snap" id="mobileSnapBtn">📷 Snap + Price</button>
+  <button type="button" class="btn-dark" id="mobileAddBtn">＋ Full Form</button>
+</div>
+
+<!-- MODAL 1: Instant Photo + Only Price Box ("Quick Snap") -->
+<div class="backdrop" id="quickSnapBackdrop">
+  <form class="modal quick-modal" id="quickSnapForm">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">⚡ FAST MODE</p>
+        <h3>Instant Photo + Price</h3>
+      </div>
+      <button type="button" class="close-x" id="closeQuickSnapBtn">✕</button>
+    </div>
+
+    <div class="quick-snap-preview" id="quickPreviewWrap">
+      <img id="quickPreviewImg" alt="Quick capture preview" src="" style="display:none;">
+      <div id="quickPlaceholder" style="text-align:center; color:#9ca3af; padding:16px;">
+        <div style="font-size:32px; margin-bottom:6px;">📸</div>
+        <div style="font-size:13px;">Tap below to click photo or pick image</div>
+      </div>
+      <button type="button" class="retake-btn" id="retakeQuickBtn">📷 Camera / Photo</button>
+    </div>
+
+    <div class="big-price-field">
+      <label for="quickPriceInput">Selling / Quoted Price (₹) *</label>
+      <div class="big-price-input-wrap">
+        <span>₹</span>
+        <input id="quickPriceInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" required>
+      </div>
+    </div>
+
+    <label class="field" style="margin-bottom:14px;">
+      Quick Tag / Optional Name (leave blank for auto-name)
+      <input id="quickNameInput" type="text" maxlength="100" placeholder="e.g. Brass Box #4 (or edit later via ✎)">
+    </label>
+
+    <div style="display:flex; gap:8px;">
+      <button type="button" class="btn-light" id="saveAndNextSnapBtn" style="flex:1;">Save &amp; Snap Next</button>
+      <button type="submit" class="btn-snap" style="flex:1.2;">⚡ Save Instantly</button>
+    </div>
+  </form>
+</div>
+
+<!-- MODAL 2: Extended Full Product Form (Add / Edit via Pen Icon) -->
+<div class="backdrop" id="fullFormBackdrop">
+  <form class="modal" id="fullProductForm">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow" id="fullFormEyebrow">EXTENDED DETAILS</p>
+        <h3 id="fullFormTitle">Add Product</h3>
+      </div>
+      <button type="button" class="close-x" id="closeFullFormBtn">✕</button>
+    </div>
+
+    <div class="image-picker">
+      <div class="preview-box" id="fullPreviewBox">
+        <img id="fullPreviewImg" alt="Product preview" src="" style="display:none;">
+        <span id="fullPreviewIcon" style="font-size:24px; color:#9ca3af;">🖼️</span>
+      </div>
+      <div class="picker-actions">
+        <div class="picker-btns">
+          <button type="button" class="btn-snap" id="formTakePhotoBtn">📷 Click Photo</button>
+          <button type="button" class="btn-light" id="formChooseFileBtn">📁 PC / Gallery</button>
+          <button type="button" class="btn-light" id="pasteImageBtn">📋 Paste image</button>
+          <button type="button" class="btn-light" id="imageUrlBtn">🔗 Image URL</button>
+          <button type="button" class="btn-light" id="formRemoveImgBtn" style="display:none;">Remove</button>
+        </div>
+        <p class="hint">Auto-compressed before saving. Drop a photo anywhere on this page, paste a copied image, or use an image URL.</p>
+      </div>
+    </div>
+    <div id="photoThumbnails" class="photo-thumbnails" aria-label="Product photos"></div>
+
+    <div class="grid">
+      <label class="field span2">
+        Product Name *
+        <input id="fName" required maxlength="120" placeholder="e.g. Artisanal Festive Gift Hamper">
+      </label>
+
+      <label class="field">
+        Selling Price (₹) *
+        <input id="fPrice" type="number" inputmode="decimal" min="0" step="0.01" value="0" required>
+      </label>
+
+      <label class="field">
+        Cost per Unit (₹)
+        <input id="fCost" type="number" inputmode="decimal" min="0" step="0.01" value="0">
+      </label>
+
+      <div class="profit-calc span2">
+        <span>Estimated Profit &amp; Margin per Unit</span>
+        <strong id="fProfitPreview">₹0 (0%)</strong>
+      </div>
+
+      <label class="field">
+        Category
+        <input id="fCategory" maxlength="80" placeholder="e.g. Luxury Box, Desk, Decor">
+      </label>
+
+      <label class="field">
+        MOQ (Min. Order Qty)
+        <input id="fMoq" type="number" inputmode="numeric" min="1" step="1" value="1">
+      </label>
+
+      <label class="field">
+        Supplier / Vendor Name
+        <input id="fSupplier" maxlength="120" placeholder="Vendor or manufacturer">
+      </label>
+
+      <label class="field">
+        Supplier Phone / Contact
+        <input id="fSupplierContact" type="tel" maxlength="60" placeholder="Phone or WhatsApp">
+      </label>
+
+      <label class="field">
+        Stock Availability
+        <select id="fStock">
+          <option>In stock</option>
+          <option>Low stock</option>
+          <option>Out of stock</option>
+          <option>Made to order</option>
+        </select>
+      </label>
+
+      <label class="field">
+        Catalogue Status
+        <select id="fStatus">
+          <option>Ready</option>
+          <option>Draft</option>
+          <option>Quick Snap</option>
+          <option>Customizable</option>
+          <option>Discontinued</option>
+        </select>
+      </label>
+
+      <label class="field span2">
+        Important Notes / Specs (Dimensions, Finish, Packaging)
+        <textarea id="fNotes" rows="2" maxlength="500" placeholder="Box size, custom branding options, lead time…"></textarea>
+      </label>
+    </div>
+
+    <div class="modal-foot">
+      <button type="button" class="btn-danger" id="deleteProductBtn" style="display:none;">Delete</button>
+      <div class="modal-foot-right">
+        <button type="button" class="btn-light" id="cancelFullFormBtn">Cancel</button>
+        <button type="submit" class="btn-dark">Save Product</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- MODAL 3: Cloud Sync & Backup Drawer -->
+<div class="backdrop" id="syncModalBackdrop">
+  <div class="modal quick-modal">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">CLOUDFLARE + LOCAL STORAGE</p>
+        <h3>Sync &amp; Backup</h3>
+      </div>
+      <button type="button" class="close-x" id="closeSyncModalBtn">✕</button>
+    </div>
+
+    <div style="background:#f9fafb; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:14px; font-size:12px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <strong>Local Engine:</strong>
+        <span style="color:var(--green); font-weight:700;">IndexedDB Active (Instant)</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+        <strong>Pending Background Sync:</strong>
+        <span id="pendingSyncCount">0 items</span>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <strong>Last Cloud Sync:</strong>
+        <span id="modalLastSync">Never</span>
+      </div>
+    </div>
+
+    <label class="field" style="margin-bottom:10px;">
+      Cloudflare Sync API Endpoint
+      <input id="syncEndpointInput" type="text" placeholder="/api/sync">
+      <span class="hint">Defaults to <code>/api/sync</code> (built-in Cloudflare Pages Function).</span>
+    </label>
+
+    <label class="field" style="margin-bottom:14px;">
+      Workspace Sync Key / Passcode (Optional)
+      <input id="syncSecretInput" type="password" placeholder="Optional shared secret for team sync">
+    </label>
+
+    <div style="display:flex; gap:8px; margin-bottom:18px;">
+      <button type="button" class="btn-dark" id="forceSyncNowBtn" style="flex:1;">↻ Sync Now</button>
+      <button type="button" class="btn-light" id="saveSyncConfigBtn">Save Config</button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid var(--line); margin:14px 0;">
+    <p style="font-size:11px; font-weight:800; color:var(--muted); text-transform:uppercase; margin:0 0 8px;">Offline File Backups</p>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button type="button" class="btn-light" id="exportCsvBtn" style="flex:1;">↓ CSV</button>
+      <button type="button" class="btn-light" id="exportZipBtn" style="flex:1;">⇩ JSON Backup</button>
+      <button type="button" class="btn-light" id="importZipBtn" style="flex:1;">⇧ Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox for Full-Screen Image Zoom -->
+<div class="lightbox" id="lightbox">
+  <button type="button" class="lightbox-close" id="closeLightboxBtn" aria-label="Close gallery">✕</button>
+  <button type="button" class="lightbox-nav lightbox-prev" id="lightboxPrevBtn" aria-label="Previous photo">‹</button>
+  <img id="lightboxImg" alt="Full size product preview" src="">
+  <button type="button" class="lightbox-nav lightbox-next" id="lightboxNextBtn" aria-label="Next photo">›</button>
+  <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/**
+ * UNBOXD — Local-First IndexedDB + Async Cloudflare Background Sync Engine
+ */
+const DB_NAME = 'unboxd_catalogue_db';
+const DB_VERSION = 1;
+const STORE_PRODUCTS = 'products';
+const LEGACY_KEYS = ['unboxd_products_v1', 'elvora_diwali_tracker_v1'];
+const CONFIG_KEY = 'unboxd_sync_config_v1';
+
+let products = [];
+let editingId = null;
+let currentImageData = ''; // Backward-compatible primary image
+let currentImagesData = [];
+let quickImageData = '';
+let lightboxImages = [];
+let lightboxIndex = 0;
+let isSyncing = false;
+let syncTimer = null;
+
+const $ = id => document.getElementById(id);
+const fmt = n => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(n) || 0);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._tid);
+  toast._tid = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function escapeHtml(s = '') {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* ==========================================
+   1. FAST LOCAL STORAGE (IndexedDB + Legacy Migration)
+   ========================================== */
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_PRODUCTS)) {
+        db.createObjectStore(STORE_PRODUCTS, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbGetAll() {
+  try {
+    const db = await openDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PRODUCTS, 'readonly');
+      const req = tx.objectStore(STORE_PRODUCTS).getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return JSON.parse(localStorage.getItem('unboxd_fallback_store') || '[]');
+  }
+}
+
+async function dbPut(product) {
+  try {
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PRODUCTS, 'readwrite');
+      tx.objectStore(STORE_PRODUCTS).put(product);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {
+    // Fallback if IndexedDB is blocked in private mode
+    try { localStorage.setItem('unboxd_fallback_store', JSON.stringify(products)); } catch {}
+  }
+}
+
+async function dbReplaceAll(list) {
+  try {
+    const db = await openDB();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PRODUCTS, 'readwrite');
+      const store = tx.objectStore(STORE_PRODUCTS);
+      store.clear();
+      for (const item of list) store.put(item);
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch {}
+}
+
+async function initData() {
+  let loaded = await dbGetAll();
+  // Migrate from old localStorage if IndexedDB is empty
+  if (!loaded.length) {
+    for (const k of LEGACY_KEYS) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length) {
+            loaded = parsed.map(p => ({ ...p, syncStatus: 'pending', updatedAt: p.updatedAt || new Date().toISOString() }));
+            await dbReplaceAll(loaded);
+            break;
+          }
+        } catch {}
+      }
+    }
+  }
+  products = loaded.filter(p => !p.deleted);
+  render();
+  // Trigger non-blocking background sync after initial instant render
+  scheduleBackgroundSync(400);
+}
+
+/* ==========================================
+   2. ASYNC BACKGROUND CLOUDFLARE SYNC ENGINE
+   ========================================== */
+function getSyncConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveSyncConfig(cfg) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+
+function updateSyncIndicator() {
+  const all = products;
+  const pending = all.filter(p => p.syncStatus === 'pending').length;
+  const pill = $('syncStatusBtn');
+  const label = $('syncLabel');
+  $('pendingSyncCount').textContent = `${pending} item${pending === 1 ? '' : 's'}`;
+
+  pill.classList.remove('syncing', 'pending', 'offline');
+  if (isSyncing) {
+    pill.classList.add('syncing');
+    label.textContent = 'Syncing to Cloud…';
+  } else if (!navigator.onLine) {
+    pill.classList.add('offline');
+    label.textContent = pending ? `Offline (${pending} queued)` : 'Offline · Local Ready';
+  } else if (pending > 0) {
+    pill.classList.add('pending');
+    label.textContent = `Local Saved (${pending} queueing)`;
+  } else {
+    label.textContent = 'Synced · Cloud Ready';
+  }
+}
+
+function scheduleBackgroundSync(delayMs = 800) {
+  updateSyncIndicator();
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => runCloudSync(false), { timeout: 2000 });
+    } else {
+      runCloudSync(false);
+    }
+  }, delayMs);
+}
+
+async function runCloudSync(manual = false) {
+  if (isSyncing || !navigator.onLine) {
+    updateSyncIndicator();
+    if (manual && !navigator.onLine) toast('Offline: Changes are safely stored on device and will sync when online.');
+    return;
+  }
+
+  const cfg = getSyncConfig();
+  const endpoint = (cfg.endpoint || '/api/sync').trim();
+  const allDbItems = await dbGetAll();
+  const dirtyItems = allDbItems.filter(p => p.syncStatus === 'pending');
+
+  isSyncing = true;
+  updateSyncIndicator();
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (cfg.secret) headers['X-Sync-Key'] = cfg.secret;
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        clientTime: new Date().toISOString(),
+        changes: dirtyItems
+      })
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (Array.isArray(data.products)) {
+      // Merge server state with any items modified while request was in flight
+      const mergedMap = new Map();
+      for (const sp of data.products) {
+        mergedMap.set(sp.id, { ...sp, syncStatus: 'synced' });
+      }
+      const currentLocal = await dbGetAll();
+      for (const lp of currentLocal) {
+        const remote = mergedMap.get(lp.id);
+        if (!remote || new Date(lp.updatedAt) > new Date(remote.updatedAt)) {
+          mergedMap.set(lp.id, { ...lp, syncStatus: dirtyItems.some(d => d.id === lp.id) ? 'synced' : lp.syncStatus });
+        }
+      }
+      const finalItems = Array.from(mergedMap.values());
+      await dbReplaceAll(finalItems);
+      products = finalItems.filter(p => !p.deleted);
+    } else {
+      // Mark pushed items as synced
+      for (const item of dirtyItems) {
+        item.syncStatus = 'synced';
+        await dbPut(item);
+      }
+      products = (await dbGetAll()).filter(p => !p.deleted);
+    }
+
+    const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    $('lastSyncedCaption').textContent = `Cloud synced at ${nowStr}`;
+    $('modalLastSync').textContent = nowStr;
+    if (manual) toast('Cloudflare sync complete!');
+  } catch (err) {
+    // Graceful silent fallback when running as a local file or before KV binding is attached
+    if (manual) {
+      toast('Saved locally. Connect Cloudflare KV/R2 on /api/sync for cloud sync.');
+    }
+  } finally {
+    isSyncing = false;
+    render();
+    updateSyncIndicator();
+  }
+}
+
+window.addEventListener('online', () => scheduleBackgroundSync(200));
+window.addEventListener('offline', updateSyncIndicator);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') scheduleBackgroundSync(500);
+});
+
+/* ==========================================
+   3. IMAGE COMPRESSION (Fast Client-Side Canvas)
+   ========================================== */
+function compressImage(file, maxDim = 960, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // Try WebP first for 35% smaller cloud payload, fallback to JPEG
+        let out = canvas.toDataURL('image/webp', quality);
+        if (!out.startsWith('data:image/webp')) {
+          out = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(out);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Multi-photo compatibility: old records with only `image` remain supported. */
+function getProductImages(product) {
+  const list = Array.isArray(product?.images) ? product.images.filter(x => typeof x === 'string' && x) : [];
+  if (product?.image && !list.includes(product.image)) list.unshift(product.image);
+  return [...new Set(list)];
+}
+
+/* ==========================================
+   4. UI RENDERING (Mobile-First Cards + Pen Edit Button)
+   ========================================== */
+function render() {
+  const q = ($('searchInput').value || '').toLowerCase().trim();
+  const statusFilter = $('statusFilter').value;
+  const sortMode = $('sortSelect').value;
+
+  let shown = products.filter(p => {
+    const text = `${p.name || ''} ${p.supplier || ''} ${p.category || ''} ${p.notes || ''}`.toLowerCase();
+    const matchesQ = !q || text.includes(q);
+    const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
+    return matchesQ && matchesStatus;
+  });
+
+  shown.sort((a, b) => {
+    if (sortMode === 'priceAsc') return (Number(a.price) || 0) - (Number(b.price) || 0);
+    if (sortMode === 'priceDesc') return (Number(b.price) || 0) - (Number(a.price) || 0);
+    if (sortMode === 'profitDesc') {
+      const pa = (Number(a.price) || 0) - (Number(a.cost) || 0);
+      const pb = (Number(b.price) || 0) - (Number(b.cost) || 0);
+      return pb - pa;
+    }
+    return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+  });
+
+  // Update KPI Stats
+  $('statCount').textContent = products.length;
+  $('statValue').textContent = fmt(products.reduce((s, p) => s + Number(p.price || 0), 0));
+  const withCost = products.filter(p => Number(p.cost) > 0);
+  $('statProfit').textContent = fmt(
+    withCost.length
+      ? withCost.reduce((s, p) => s + (Number(p.price || 0) - Number(p.cost || 0)), 0) / withCost.length
+      : 0
+  );
+  const snapsOrAlerts = products.filter(p => p.status === 'Quick Snap' || ['Low stock', 'Out of stock'].includes(p.stock)).length;
+  $('statAlerts').textContent = snapsOrAlerts;
+
+  $('catalogueCaption').textContent = `${shown.length} shown · ${products.length} total`;
+  $('emptyState').style.display = shown.length ? 'none' : 'block';
+
+  const penSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+
+  $('productGrid').innerHTML = shown.map(p => {
+    const price = Number(p.price || 0);
+    const cost = Number(p.cost || 0);
+    const profit = price - cost;
+    const hasCost = cost > 0;
+    const isSnap = p.status === 'Quick Snap';
+    const stockClass = p.stock === 'In stock' ? 'in' : p.stock === 'Low stock' ? 'low' : p.stock === 'Out of stock' ? 'out' : '';
+    const statusClass = p.status === 'Ready' ? 'ready' : isSnap ? 'snap' : '';
+    const subLine = [p.category, p.supplier ? `Vendor: ${p.supplier}` : '', p.notes].filter(Boolean).join(' · ') || (isSnap ? 'Tap ✎ pen icon to add full details' : 'UNBOXD item');
+
+    return `
+      <article class="card">
+        <div class="card-media">
+          ${getProductImages(p).length ? `<img src="${getProductImages(p)[0]}" alt="${escapeHtml(p.name)}" data-zoom="${p.id}" loading="lazy">${getProductImages(p).length > 1 ? `<span class="photo-count">${getProductImages(p).length} photos</span>` : ''}` : `<span class="card-placeholder">📦</span>`}
+          ${isSnap ? `<span class="snap-badge">⚡ SNAP</span>` : ''}
+        </div>
+        <div class="card-body">
+          <div class="card-top">
+            <div style="min-width:0; flex:1;">
+              <h4 class="card-title">${escapeHtml(p.name || 'Untitled Snap')}</h4>
+              <p class="card-sub">${escapeHtml(subLine)}</p>
+            </div>
+            <button type="button" class="edit-pen-btn" data-edit="${p.id}" title="Edit full product details" aria-label="Edit ${escapeHtml(p.name)}">
+              ${penSvg}
+            </button>
+          </div>
+          <div class="price-strip">
+            <span class="sell-price">${fmt(price)}</span>
+            ${hasCost ? `<span class="cost-meta">Cost: ${fmt(cost)}</span>` : `<span class="cost-meta">MOQ: ${Number(p.moq || 1)}</span>`}
+            ${hasCost ? `<span class="profit-tag ${profit >= 0 ? 'pos' : 'neg'}">${profit >= 0 ? '+' : ''}${fmt(profit)}</span>` : ''}
+          </div>
+          <div class="card-tags">
+            <span class="pill ${statusClass}">${escapeHtml(p.status || 'Draft')}</span>
+            <span class="pill ${stockClass}">${escapeHtml(p.stock || 'In stock')}</span>
+            ${p.syncStatus === 'pending' ? `<span class="pill sync-pending" title="Saved locally, syncing in background">↻ Local</span>` : ''}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+/* ==========================================
+   5. MODE 1: INSTANT PHOTO + ONLY PRICE BOX ("QUICK SNAP")
+   ========================================== */
+function triggerInstantSnap() {
+  // Immediately open phone camera / file chooser for 1-step photo capture
+  $('instantCameraInput').value = '';
+  $('instantCameraInput').click();
+}
+
+$('instantCameraInput').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    quickImageData = await compressImage(file);
+    openQuickSnapModal(quickImageData);
+  } catch {
+    toast('Could not process photo. Try again.');
+  }
+});
+
+function openQuickSnapModal(imgData = '') {
+  quickImageData = imgData;
+  $('quickPriceInput').value = '';
+  $('quickNameInput').value = '';
+  if (imgData) {
+    $('quickPreviewImg').src = imgData;
+    $('quickPreviewImg').style.display = 'block';
+    $('quickPlaceholder').style.display = 'none';
+  } else {
+    $('quickPreviewImg').src = '';
+    $('quickPreviewImg').style.display = 'none';
+    $('quickPlaceholder').style.display = 'block';
+  }
+  $('quickSnapBackdrop').classList.add('open');
+  setTimeout(() => $('quickPriceInput').focus(), 80);
+}
+
+async function saveQuickSnapProduct(andNext = false) {
+  const priceVal = $('quickPriceInput').value;
+  if (priceVal === '' || Number(priceVal) < 0) {
+    toast('Enter a price to save.');
+    $('quickPriceInput').focus();
+    return;
+  }
+  const timeTag = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const autoName = $('quickNameInput').value.trim() || `Snap #${products.length + 1} (${timeTag})`;
+
+  const newProduct = {
+    id: uid(),
+    name: autoName,
+    price: Number(priceVal || 0),
+    cost: 0,
+    category: '',
+    moq: 1,
+    supplier: '',
+    supplierContact: '',
+    stock: 'In stock',
+    status: 'Quick Snap',
+    notes: '',
+    image: quickImageData,
+    images: quickImageData ? [quickImageData] : [],
+    syncStatus: 'pending',
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1. Save locally first (instant)
+  products = [newProduct, ...products];
+  render();
+  await dbPut(newProduct);
+
+  // 2. Sync to Cloudflare asynchronously in background
+  scheduleBackgroundSync(300);
+
+  if (andNext) {
+    toast('Saved! Ready for next photo.');
+    triggerInstantSnap();
+  } else {
+    $('quickSnapBackdrop').classList.remove('open');
+    toast('⚡ Saved locally! Syncing in background…');
+  }
+}
+
+$('quickSnapForm').addEventListener('submit', e => {
+  e.preventDefault();
+  saveQuickSnapProduct(false);
+});
+$('saveAndNextSnapBtn').addEventListener('click', () => saveQuickSnapProduct(true));
+$('retakeQuickBtn').addEventListener('click', () => $('instantCameraInput').click());
+$('closeQuickSnapBtn').addEventListener('click', () => $('quickSnapBackdrop').classList.remove('open'));
+
+$('desktopSnapBtn').addEventListener('click', triggerInstantSnap);
+$('mobileSnapBtn').addEventListener('click', triggerInstantSnap);
+$('emptySnapBtn').addEventListener('click', triggerInstantSnap);
+
+/* ==========================================
+   6. MODE 2: EXTENDED FULL PRODUCT FORM & PEN EDIT
+   ========================================== */
+function renderPhotoThumbnails() {
+  const wrap = $('photoThumbnails');
+  if (!wrap) return;
+  wrap.innerHTML = currentImagesData.map((src, i) => `
+    <div class="photo-thumb" title="Photo ${i + 1}">
+      <img src="${src}" alt="Product photo ${i + 1}">
+      <button type="button" data-remove-photo="${i}" aria-label="Remove photo ${i + 1}">×</button>
+    </div>`).join('');
+}
+
+function setFullPreview(src) {
+  currentImagesData = Array.isArray(src) ? src.filter(Boolean) : (src ? [src] : []);
+  currentImageData = currentImagesData[0] || '';
+  if (currentImageData) {
+    $('fullPreviewImg').src = currentImageData;
+    $('fullPreviewImg').style.display = 'block';
+    $('fullPreviewIcon').style.display = 'none';
+    $('formRemoveImgBtn').style.display = 'inline-flex';
+  } else {
+    $('fullPreviewImg').src = '';
+    $('fullPreviewImg').style.display = 'none';
+    $('fullPreviewIcon').style.display = 'block';
+    $('formRemoveImgBtn').style.display = 'none';
+  }
+  renderPhotoThumbnails();
+}
+
+async function addProductPhotos(files) {
+  const imageFiles = [...(files || [])].filter(file => file && file.type && file.type.startsWith('image/'));
+  if (!imageFiles.length) return;
+  try {
+    for (const file of imageFiles) {
+      const compressed = await compressImage(file);
+      if (!currentImagesData.includes(compressed)) currentImagesData.push(compressed);
+    }
+    currentImageData = currentImagesData[0] || '';
+    setFullPreview(currentImagesData);
+    toast(`${imageFiles.length} photo${imageFiles.length === 1 ? '' : 's'} attached.`);
+  } catch {
+    toast('Could not read one or more images.');
+  }
+}
+
+function updateFullProfitPreview() {
+  const price = Number($('fPrice').value || 0);
+  const cost = Number($('fCost').value || 0);
+  const profit = price - cost;
+  const margin = price > 0 ? Math.round((profit / price) * 100) : 0;
+  $('fProfitPreview').textContent = `${fmt(profit)} (${margin}%)`;
+  $('fProfitPreview').style.color = profit >= 0 ? 'var(--green)' : 'var(--red)';
+}
+
+function openFullAddModal() {
+  editingId = null;
+  $('fullProductForm').reset();
+  $('fPrice').value = '';
+  $('fCost').value = '0';
+  $('fMoq').value = '1';
+  $('fStock').value = 'In stock';
+  $('fStatus').value = 'Ready';
+  setFullPreview('');
+  $('fullFormEyebrow').textContent = 'NEW CATALOGUE ITEM';
+  $('fullFormTitle').textContent = 'Add Full Product';
+  $('deleteProductBtn').style.display = 'none';
+  updateFullProfitPreview();
+  $('fullFormBackdrop').classList.add('open');
+}
+
+function openFullEditModal(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  $('fName').value = p.name || '';
+  $('fPrice').value = p.price ?? 0;
+  $('fCost').value = p.cost ?? 0;
+  $('fCategory').value = p.category || '';
+  $('fMoq').value = p.moq || 1;
+  $('fSupplier').value = p.supplier || '';
+  $('fSupplierContact').value = p.supplierContact || '';
+  $('fStock').value = p.stock || 'In stock';
+  // If editing a Quick Snap, default status selector to Ready so user can promote it easily
+  $('fStatus').value = p.status === 'Quick Snap' ? 'Ready' : (p.status || 'Ready');
+  $('fNotes').value = p.notes || '';
+  setFullPreview(getProductImages(p));
+  $('fullFormEyebrow').textContent = p.status === 'Quick Snap' ? 'COMPLETE QUICK SNAP' : 'UPDATE PRODUCT';
+  $('fullFormTitle').textContent = 'Edit Product Details';
+  $('deleteProductBtn').style.display = 'inline-flex';
+  updateFullProfitPreview();
+  $('fullFormBackdrop').classList.add('open');
+}
+
+$('fPrice').addEventListener('input', updateFullProfitPreview);
+$('fCost').addEventListener('input', updateFullProfitPreview);
+
+$('formTakePhotoBtn').addEventListener('click', () => {
+  $('formCameraInput').value = '';
+  $('formCameraInput').click();
+});
+$('formChooseFileBtn').addEventListener('click', () => {
+  $('formGalleryInput').value = '';
+  $('formGalleryInput').click();
+});
+$('formRemoveImgBtn').addEventListener('click', () => setFullPreview([]));
+$('photoThumbnails').addEventListener('click', e => {
+  const btn = e.target.closest('[data-remove-photo]');
+  if (!btn) return;
+  currentImagesData.splice(Number(btn.dataset.removePhoto), 1);
+  setFullPreview(currentImagesData);
+});
+
+$('pasteImageBtn').addEventListener('click', async () => {
+  try {
+    if (!navigator.clipboard?.read) throw new Error('Clipboard image reading is not supported here. Use Ctrl+V or the Image URL option.');
+    const items = await navigator.clipboard.read();
+    for (const item of items) {
+      const type = item.types.find(t => t.startsWith('image/'));
+      if (type) { const blob = await item.getType(type); await addProductPhotos([blob]); return; }
+    }
+    toast('No image found in clipboard. Copy an image first.');
+  } catch (err) { toast(err.message || 'Clipboard access blocked. Try Ctrl+V or Image URL.'); }
+});
+$('imageUrlBtn').addEventListener('click', async () => {
+  const url = prompt('Paste a direct image URL (https://…). Some websites block image importing.');
+  if (!url) return;
+  try {
+    const parsed = new URL(url);
+    if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('Use an http or https image URL.');
+    const response = await fetch(parsed.href, {mode:'cors'});
+    if (!response.ok) throw new Error('Image could not be fetched.');
+    const blob = await response.blob();
+    if (!blob.type.startsWith('image/')) throw new Error('That URL did not return an image. Try the direct image URL.');
+    await addProductPhotos([blob]);
+  } catch (err) { toast(err.message || 'Import blocked by the website. Save/copy the image and paste or upload it instead.'); }
+});
+
+
+async function handleFormImagePick(e) {
+  const files = [...(e.target.files || [])];
+  if (!files.length) return;
+  await addProductPhotos(files);
+  e.target.value = '';
+}
+$('formCameraInput').addEventListener('change', handleFormImagePick);
+$('formGalleryInput').addEventListener('change', handleFormImagePick);
+
+// Support Ctrl+V image paste on PC
+window.addEventListener('paste', async e => {
+  const items = e.clipboardData?.items || [];
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) {
+        if ($('quickSnapBackdrop').classList.contains('open')) {
+          const compressed = await compressImage(file);
+          quickImageData = compressed; $('quickPreviewImg').src = compressed; $('quickPreviewImg').style.display = 'block'; $('quickPlaceholder').style.display = 'none';
+          toast('Pasted image attached!');
+        } else {
+          if (!$('fullFormBackdrop').classList.contains('open')) openFullAddModal();
+          await addProductPhotos([file]);
+        }
+      }
+    }
+  }
+});
+
+$('fullProductForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const item = {
+    id: editingId || uid(),
+    name: $('fName').value.trim(),
+    price: Number($('fPrice').value || 0),
+    cost: Number($('fCost').value || 0),
+    category: $('fCategory').value.trim(),
+    moq: Math.max(1, Number($('fMoq').value || 1)),
+    supplier: $('fSupplier').value.trim(),
+    supplierContact: $('fSupplierContact').value.trim(),
+    stock: $('fStock').value,
+    status: $('fStatus').value,
+    notes: $('fNotes').value.trim(),
+    image: currentImagesData[0] || currentImageData,
+    images: [...currentImagesData],
+    syncStatus: 'pending',
+    updatedAt: new Date().toISOString()
+  };
+
+  if (editingId) {
+    products = products.map(x => x.id === editingId ? item : x);
+  } else {
+    products = [item, ...products];
+  }
+
+  $('fullFormBackdrop').classList.remove('open');
+  render();
+  await dbPut(item);
+  toast('Saved locally! Syncing in background…');
+  scheduleBackgroundSync(300);
+});
+
+$('deleteProductBtn').addEventListener('click', async () => {
+  if (!editingId || !confirm('Delete this product from UNBOXD?')) return;
+  const target = products.find(x => x.id === editingId);
+  products = products.filter(x => x.id !== editingId);
+  $('fullFormBackdrop').classList.remove('open');
+  render();
+  if (target) {
+    await dbPut({ ...target, deleted: true, syncStatus: 'pending', updatedAt: new Date().toISOString() });
+  }
+  toast('Product deleted.');
+  scheduleBackgroundSync(300);
+});
+
+$('desktopAddBtn').addEventListener('click', openFullAddModal);
+$('mobileAddBtn').addEventListener('click', openFullAddModal);
+$('emptyAddBtn').addEventListener('click', openFullAddModal);
+$('closeFullFormBtn').addEventListener('click', () => $('fullFormBackdrop').classList.remove('open'));
+$('cancelFullFormBtn').addEventListener('click', () => $('fullFormBackdrop').classList.remove('open'));
+
+// Delegate Card Clicks (Pen Icon Edit & Image Zoom)
+$('productGrid').addEventListener('click', e => {
+  const editBtn = e.target.closest('[data-edit]');
+  if (editBtn) {
+    openFullEditModal(editBtn.dataset.edit);
+    return;
+  }
+  const zoomImg = e.target.closest('[data-zoom]');
+  if (zoomImg) {
+    const product = products.find(p => p.id === zoomImg.dataset.zoom);
+    lightboxImages = product ? getProductImages(product) : [zoomImg.src];
+    if (!lightboxImages.length) lightboxImages = [zoomImg.src];
+    lightboxIndex = Math.max(0, lightboxImages.indexOf(zoomImg.src));
+    showLightboxImage();
+    $('lightbox').classList.add('open');
+  }
+});
+
+function showLightboxImage() {
+  if (!lightboxImages.length) return;
+  $('lightboxImg').src = lightboxImages[lightboxIndex];
+  $('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+  $('lightboxPrevBtn').style.display = lightboxImages.length > 1 ? 'inline-flex' : 'none';
+  $('lightboxNextBtn').style.display = lightboxImages.length > 1 ? 'inline-flex' : 'none';
+}
+$('lightboxPrevBtn').addEventListener('click', e => { e.stopPropagation(); lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); });
+$('lightboxNextBtn').addEventListener('click', e => { e.stopPropagation(); lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); });
+document.addEventListener('keydown', e => {
+  if (!$('lightbox').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') { lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length; showLightboxImage(); }
+  if (e.key === 'ArrowRight') { lightboxIndex = (lightboxIndex + 1) % lightboxImages.length; showLightboxImage(); }
+});
+$('closeLightboxBtn').addEventListener('click', () => $('lightbox').classList.remove('open'));
+$('lightbox').addEventListener('click', e => {
+  if (e.target === $('lightbox')) $('lightbox').classList.remove('open');
+});
+
+$('searchInput').addEventListener('input', render);
+$('statusFilter').addEventListener('change', render);
+$('sortSelect').addEventListener('change', render);
+
+/* ==========================================
+   7. SYNC SETTINGS & ZIP/CSV BACKUP
+   ========================================== */
+function openSyncModal() {
+  const cfg = getSyncConfig();
+  $('syncEndpointInput').value = cfg.endpoint || '/api/sync';
+  $('syncSecretInput').value = cfg.secret || '';
+  updateSyncIndicator();
+  $('syncModalBackdrop').classList.add('open');
+}
+$('syncStatusBtn').addEventListener('click', openSyncModal);
+$('backupMenuBtn').addEventListener('click', openSyncModal);
+$('closeSyncModalBtn').addEventListener('click', () => $('syncModalBackdrop').classList.remove('open'));
+
+$('saveSyncConfigBtn').addEventListener('click', () => {
+  saveSyncConfig({
+    endpoint: $('syncEndpointInput').value.trim() || '/api/sync',
+    secret: $('syncSecretInput').value.trim()
+  });
+  toast('Sync configuration saved.');
+  scheduleBackgroundSync(100);
+});
+$('forceSyncNowBtn').addEventListener('click', () => runCloudSync(true));
+
+// CSV Export
+$('exportCsvBtn').addEventListener('click', () => {
+  const cols = ['name', 'price', 'cost', 'profit', 'category', 'moq', 'supplier', 'supplierContact', 'stock', 'status', 'notes', 'updatedAt'];
+  const esc = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const csv = [
+    cols.join(','),
+    ...products.map(p => cols.map(k => esc(k === 'profit' ? Number(p.price || 0) - Number(p.cost || 0) : p[k])).join(','))
+  ].join('\r\n');
+  downloadBlob(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }), 'unboxd-catalogue.csv');
+});
+
+// Zero-dependency ZIP Export & Import
+function crc32(bytes) {
+  let c = ~0;
+  for (let i = 0; i < bytes.length; i++) {
+    c ^= bytes[i];
+    for (let k = 0; k < 8; k++) c = (c >>> 1) ^ ((c & 1) ? 0xEDB88320 : 0);
+  }
+  return (~c) >>> 0;
+}
+const u16 = n => [n & 255, (n >>> 8) & 255];
+const u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+const bytesOf = s => new TextEncoder().encode(s);
+
+function makeZip(entries) {
+  const local = [], central = [];
+  let offset = 0;
+  for (const entry of entries) {
+    const name = bytesOf(entry.name), data = entry.data, crc = crc32(data);
+    const lh = new Uint8Array([...u32(0x04034b50), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...name]);
+    local.push(lh, data);
+    const ch = new Uint8Array([...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(data.length), ...u32(data.length), ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset), ...name]);
+    central.push(ch);
+    offset += lh.length + data.length;
+  }
+  const centralSize = central.reduce((s, a) => s + a.length, 0), count = entries.length;
+  const end = new Uint8Array([...u32(0x06054b50), ...u16(0), ...u16(0), ...u16(count), ...u16(count), ...u32(centralSize), ...u32(offset), ...u16(0)]);
+  return new Blob([...local, ...central, end], { type: 'application/zip' });
+}
+
+$('exportZipBtn').addEventListener('click', async () => {
+  // Portable, transparent backup: product records and compressed image data in one JSON file.
+  const all = await dbGetAll();
+  const payload = { format: 'unboxd-tracker', version: 3, exportedAt: new Date().toISOString(), products: all };
+  downloadBlob(new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'}), 'unboxd-backup.json');
+});
+
+$('importZipBtn').addEventListener('click', () => $('zipFileInput').click());
+$('zipFileInput').addEventListener('change', async e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    let text = '';
+    if (file.name.endsWith('.json')) {
+      text = await file.text();
+    } else {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const decoder = new TextDecoder();
+      const readU16 = (b, o) => b[o] | (b[o + 1] << 8);
+      const readU32 = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+      let eocd = -1;
+      for (let i = Math.max(0, buf.length - 65557); i <= buf.length - 22; i++) {
+        if (readU32(buf, i) === 0x06054b50) eocd = i;
+      }
+      if (eocd < 0) throw new Error('Invalid backup ZIP');
+      const localOffset = readU32(buf, readU32(buf, eocd + 16) + 42);
+      const size = readU32(buf, readU32(buf, eocd + 16) + 24);
+      const nameLen = readU16(buf, localOffset + 26);
+      const extraLen = readU16(buf, localOffset + 28);
+      const start = localOffset + 30 + nameLen + extraLen;
+      text = decoder.decode(buf.slice(start, start + size));
+    }
+    const parsed = JSON.parse(text);
+    const incoming = Array.isArray(parsed) ? parsed : parsed.products;
+    if (!Array.isArray(incoming)) throw new Error('Invalid product list');
+    if (!incoming.every(p => p && typeof p === 'object' && !Array.isArray(p))) throw new Error('Backup must contain a list of product objects.');
+    const mode = confirm('OK = merge backup into this catalogue (matching IDs update).\nCancel = replace this device catalogue with the backup.');
+    const existing = await dbGetAll();
+    const normalized = incoming.map(p => ({ ...p, id: p.id || uid(), syncStatus: 'pending', updatedAt: p.updatedAt || new Date().toISOString() }));
+    let result;
+    if (mode) {
+      const map = new Map(existing.map(p => [p.id, p]));
+      for (const p of normalized) {
+        const old = map.get(p.id);
+        if (!old || new Date(p.updatedAt || 0) >= new Date(old.updatedAt || 0)) map.set(p.id, p);
+      }
+      result = [...map.values()];
+    } else {
+      if (!confirm('Replace all local products? Export a backup first if unsure.')) return;
+      result = normalized;
+    }
+    await dbReplaceAll(result);
+    products = result.filter(p => !p.deleted);
+    render();
+    toast(`Imported ${normalized.length} records. Catalogue now has ${products.length}.`);
+    scheduleBackgroundSync(200);
+  } catch (err) {
+    alert('Import failed: ' + (err.message || 'Unknown error'));
+  } finally {
+    e.target.value = '';
+  }
+});
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+  toast('Download started.');
+}
+
+// Close backdrops on outside tap or Escape
+['quickSnapBackdrop', 'fullFormBackdrop', 'syncModalBackdrop'].forEach(id => {
+  $(id).addEventListener('click', e => {
+    if (e.target === $(id)) $(id).classList.remove('open');
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['quickSnapBackdrop', 'fullFormBackdrop', 'syncModalBackdrop', 'lightbox'].forEach(id => $(id).classList.remove('open'));
+  }
+});
+
+// Drop an image anywhere on the page: compress it, then open the extended add form.
+let dragDepth = 0;
+document.addEventListener('dragenter', e => {
+  if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); dragDepth++; document.body.classList.add('drag-over'); }
+});
+document.addEventListener('dragover', e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) e.preventDefault(); });
+document.addEventListener('dragleave', e => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) document.body.classList.remove('drag-over'); } });
+document.addEventListener('drop', async e => {
+  const files = [...(e.dataTransfer?.files || [])];
+  if (!files.length) return;
+  const imageFiles = files.filter(f => f.type.startsWith('image/'));
+  if (!imageFiles.length) { toast('Drop image files to add a product.'); return; }
+  e.preventDefault(); dragDepth = 0; document.body.classList.remove('drag-over');
+  openFullAddModal();
+  await addProductPhotos(imageFiles);
+  $('fName').focus(); toast(`${imageFiles.length} photo${imageFiles.length === 1 ? '' : 's'} added. Complete the product details.`);
+});
+
+// Register Service Worker for offline PWA phone experience
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+initData();
+</script>
+</body>
+</html>
